@@ -1,30 +1,40 @@
--- Bảng movies
+DROP DATABASE IF EXISTS MovieTicketDB_New;
+CREATE DATABASE MovieTicketDB_New;
+USE MovieTicketDB_New;
+
 CREATE TABLE movies (
     movie_id INT PRIMARY KEY AUTO_INCREMENT,
     movie_name VARCHAR(100) NOT NULL UNIQUE,
     duration INT,
-    genre VARCHAR(50)
+    genre VARCHAR(50),
+    age_rating VARCHAR(10),
+    director VARCHAR(100)
 );
 
--- Bảng showtimes
+CREATE TABLE theaters (
+    theater_id INT PRIMARY KEY AUTO_INCREMENT,
+    theater_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100)
+);
+
 CREATE TABLE showtimes (
     showtime_id INT PRIMARY KEY AUTO_INCREMENT,
     movie_id INT,
     showtime DATETIME NOT NULL,
-    room VARCHAR(10),
-    FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+    theater_id INT,
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id),
+    FOREIGN KEY (theater_id) REFERENCES theaters(theater_id)
 );
 
--- Bảng seats
 CREATE TABLE seats (
     seat_id INT PRIMARY KEY AUTO_INCREMENT,
     showtime_id INT,
     seat_number VARCHAR(5) NOT NULL,
     is_booked BOOLEAN DEFAULT FALSE,
+    seat_type ENUM('NORMAL', 'VIP', 'SWEETBOX') DEFAULT 'NORMAL',
     FOREIGN KEY (showtime_id) REFERENCES showtimes(showtime_id)
 );
 
--- Bảng tickets
 CREATE TABLE tickets (
     ticket_id INT PRIMARY KEY AUTO_INCREMENT,
     showtime_id INT,
@@ -33,97 +43,89 @@ CREATE TABLE tickets (
     FOREIGN KEY (showtime_id) REFERENCES showtimes(showtime_id)
 );
 
+INSERT INTO movies (movie_name, duration, genre, age_rating, director) VALUES
+('Avengers', 120, 'Action', '13+', 'Anthony Russo, Joe Russo'),
+('Titanic', 180, 'Romance', '13+', 'James Cameron'),
+('Harry Potter', 150, 'Fantasy', '13+', 'Chris Columbus'),
+('The Shawshank Redemption', 142, 'Drama', '16+', 'Frank Darabont'),
+('Inception', 148, 'Sci-Fi', '13+', 'Christopher Nolan'),
+('The Dark Knight', 152, 'Action', '13+', 'Christopher Nolan'),
+('Pulp Fiction', 154, 'Crime', '18+', 'Quentin Tarantino');
 
--- Thêm phim
-INSERT INTO movies (movie_name, duration, genre) VALUES
-('Avengers', 120, 'Action'),
-('Titanic', 180, 'Romance'),
-('Harry Potter', 150, 'Fantasy'),
-('The Shawshank Redemption', 142, 'Drama'),
-('Inception', 148, 'Sci-Fi'),
-('The Dark Knight', 152, 'Action'),
-('Pulp Fiction', 154, 'Crime');
-
--- Thêm lịch chiếu
-INSERT INTO showtimes (movie_id, showtime, room) VALUES
-(1, '2025-02-23 19:00:00', 'Room1'), -- Avengers
-(2, '2025-02-23 20:00:00', 'Room2'), -- Titanic
-(3, '2025-02-24 15:00:00', 'Room1'), -- Harry Potter
-(4, '2025-02-24 18:00:00', 'Room1'), -- The Shawshank Redemption
-(5, '2025-02-24 19:00:00', 'Room2'), -- Inception
-(6, '2025-02-24 20:00:00', 'Room1'), -- The Dark Knight
-(7, '2025-02-24 21:00:00', 'Room2'); -- Pulp Fiction
-
--- Thêm ghế cho tất cả showtime_id
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-VALUES 
-(1, 'A1', FALSE), (1, 'A2', FALSE), (1, 'A3', FALSE), (1, 'A4', FALSE), (1, 'A5', FALSE), (1, 'A6', FALSE), (1, 'A7', FALSE), (1, 'A8', FALSE),
-(1, 'B1', FALSE), (1, 'B2', FALSE), (1, 'B3', FALSE), (1, 'B4', TRUE), (1, 'B5', FALSE), (1, 'B6', FALSE), (1, 'B7', FALSE), (1, 'B8', FALSE),
-(1, 'C1', FALSE), (1, 'C2', FALSE), (1, 'C3', FALSE), (1, 'C4', FALSE), (1, 'C5', FALSE), (1, 'C6', FALSE), (1, 'C7', FALSE), (1, 'C8', FALSE),
-(1, 'D1', FALSE), (1, 'D2', FALSE), (1, 'D3', FALSE), (1, 'D4', FALSE), (1, 'D5', TRUE), (1, 'D6', FALSE), (1, 'D7', FALSE), (1, 'D8', FALSE),
-(1, 'E1', FALSE), (1, 'E2', FALSE), (1, 'E3', FALSE), (1, 'E4', TRUE), (1, 'E5', FALSE), (1, 'E6', TRUE), (1, 'E7', FALSE), (1, 'E8', FALSE),
-(1, 'F1', FALSE), (1, 'F2', FALSE), (1, 'F3', FALSE), (1, 'F4', FALSE), (1, 'F5', FALSE), (1, 'F6', FALSE), (1, 'F7', FALSE), (1, 'F8', FALSE);
-
--- Sao chép ghế cho các showtime_id khác với is_booked = FALSE
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 2, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 3, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 4, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 5, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 6, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-INSERT INTO seats (showtime_id, seat_number, is_booked)
-SELECT 7, seat_number, FALSE FROM seats WHERE showtime_id = 1;
-
--- Thêm vé mẫu cho Avengers (showtime_id = 1)
-INSERT INTO tickets (showtime_id, seat_number) VALUES
-(1, 'B4'),
-(1, 'D5'),
-(1, 'E6'),
-(1, 'E4');
-
--- Kiểm tra dữ liệu
-SELECT * FROM movies;
-SELECT * FROM showtimes;
-SELECT * FROM seats WHERE showtime_id = 1 AND is_booked = TRUE;
-SELECT * FROM tickets;
-
-ALTER TABLE movies 
-ADD COLUMN age_rating VARCHAR(10), -- Ví dụ: "13+", "16+"
-ADD COLUMN director VARCHAR(100);
-
--- Cập nhật dữ liệu mẫu
-UPDATE movies SET age_rating = '13+', director = 'Anthony Russo, Joe Russo' WHERE movie_name = 'Avengers';
-UPDATE movies SET age_rating = '13+', director = 'James Cameron' WHERE movie_name = 'Titanic';
-UPDATE movies SET age_rating = '13+', director = 'Chris Columbus' WHERE movie_name = 'Harry Potter';
-UPDATE movies SET age_rating = '16+', director = 'Frank Darabont' WHERE movie_name = 'The Shawshank Redemption';
-UPDATE movies SET age_rating = '13+', director = 'Christopher Nolan' WHERE movie_name = 'Inception';
-UPDATE movies SET age_rating = '13+', director = 'Christopher Nolan' WHERE movie_name = 'The Dark Knight';
-UPDATE movies SET age_rating = '18+', director = 'Quentin Tarantino' WHERE movie_name = 'Pulp Fiction';
-
--- Bảng theaters
-CREATE TABLE theaters (
-    theater_id INT PRIMARY KEY AUTO_INCREMENT,
-    theater_name VARCHAR(100) NOT NULL,
-    location VARCHAR(100)
-);
-
--- Cập nhật bảng showtimes để liên kết với theaters
-ALTER TABLE showtimes 
-DROP COLUMN room,
-ADD COLUMN theater_id INT,
-ADD FOREIGN KEY (theater_id) REFERENCES theaters(theater_id);
-
--- Thêm dữ liệu mẫu cho theaters
 INSERT INTO theaters (theater_name, location) VALUES
 ('CGV Mỹ Tho', 'Mỹ Tho, Tiền Giang'),
 ('CGV Sài Gòn', 'Quận 1, TP.HCM'),
-('Lotte Cinema', 'Quận 7, TP.HCM');
+('Lotte Cinema', 'Quận 7, TP.HCM'),
+('BHD Star Cineplex', 'Quận 3, TP.HCM'),
+('Galaxy Cinema', 'Quận Tân Bình, TP.HCM');
 
--- Cập nhật showtimes với theater_id
-UPDATE showtimes SET theater_id = 1 WHERE showtime_id IN (1, 3, 4, 6); -- CGV Mỹ Tho
-UPDATE showtimes SET theater_id = 2 WHERE showtime_id IN (2, 5); -- CGV Sài Gòn
-UPDATE showtimes SET theater_id = 3 WHERE showtime_id = 7; -- Lotte Cinema
+INSERT INTO showtimes (movie_id, showtime, theater_id) VALUES
+(1, '2025-02-24 19:00:00', 1), -- Avengers, CGV Mỹ Tho, Thứ 2
+(1, '2025-02-24 21:00:00', 2), -- Avengers, CGV Sài Gòn, Thứ 2
+(3, '2025-02-25 15:00:00', 1), -- Harry Potter, CGV Mỹ Tho, Thứ 3
+(2, '2025-02-26 20:00:00', 3), -- Titanic, Lotte Cinema, Thứ 4
+(4, '2025-02-27 18:00:00', 4), -- The Shawshank Redemption, BHD Star Cineplex, Thứ 5
+(1, '2025-02-28 19:00:00', 1), -- Avengers, CGV Mỹ Tho, Thứ 6
+(1, '2025-02-28 21:00:00', 2), -- Avengers, CGV Sài Gòn, Thứ 6
+(1, '2025-03-01 10:00:00', 1), -- Avengers, CGV Mỹ Tho, 01/03, 10:00
+(1, '2025-03-01 13:00:00', 1), -- Avengers, CGV Mỹ Tho, 01/03, 13:00
+(1, '2025-03-01 16:00:00', 1), -- Avengers, CGV Mỹ Tho, 01/03, 16:00
+(1, '2025-03-01 19:00:00', 1), -- Avengers, CGV Mỹ Tho, 01/03, 19:00
+(3, '2025-03-01 15:00:00', 1), -- Harry Potter, CGV Mỹ Tho, 01/03, 15:00
+(3, '2025-03-01 17:00:00', 1), -- Harry Potter, CGV Mỹ Tho, 01/03, 17:00
+(3, '2025-03-01 19:00:00', 1), -- Harry Potter, CGV Mỹ Tho, 01/03, 19:00
+(3, '2025-03-01 21:00:00', 1), -- Harry Potter, CGV Mỹ Tho, 01/03, 21:00
+(2, '2025-03-01 11:00:00', 1), -- Titanic, CGV Mỹ Tho, 01/03, 11:00
+(2, '2025-03-01 14:00:00', 1), -- Titanic, CGV Mỹ Tho, 01/03, 14:00
+(2, '2025-03-01 17:00:00', 1), -- Titanic, CGV Mỹ Tho, 01/03, 17:00
+(2, '2025-03-01 20:00:00', 1), -- Titanic, CGV Mỹ Tho, 01/03, 20:00
+(6, '2025-03-02 20:00:00', 2); -- The Dark Knight, CGV Sài Gòn, Chủ nhật
+
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) VALUES 
+(1, 'A1', FALSE, 'NORMAL'), (1, 'A2', FALSE, 'NORMAL'), (1, 'A3', FALSE, 'NORMAL'), (1, 'A4', FALSE, 'NORMAL'), (1, 'A5', FALSE, 'NORMAL'), (1, 'A6', FALSE, 'NORMAL'), (1, 'A7', FALSE, 'NORMAL'), (1, 'A8', FALSE, 'NORMAL'),
+(1, 'B1', FALSE, 'NORMAL'), (1, 'B2', FALSE, 'NORMAL'), (1, 'B3', FALSE, 'NORMAL'), (1, 'B4', TRUE, 'NORMAL'), (1, 'B5', FALSE, 'NORMAL'), (1, 'B6', FALSE, 'NORMAL'), (1, 'B7', FALSE, 'NORMAL'), (1, 'B8', FALSE, 'NORMAL'),
+(1, 'C1', FALSE, 'NORMAL'), (1, 'C2', FALSE, 'NORMAL'), (1, 'C3', FALSE, 'NORMAL'), (1, 'C4', FALSE, 'NORMAL'), (1, 'C5', FALSE, 'NORMAL'), (1, 'C6', FALSE, 'NORMAL'), (1, 'C7', FALSE, 'NORMAL'), (1, 'C8', FALSE, 'NORMAL'),
+(1, 'D1', FALSE, 'VIP'), (1, 'D2', FALSE, 'VIP'), (1, 'D3', FALSE, 'VIP'), (1, 'D4', FALSE, 'VIP'), (1, 'D5', TRUE, 'VIP'), (1, 'D6', FALSE, 'VIP'), (1, 'D7', FALSE, 'VIP'), (1, 'D8', FALSE, 'VIP'),
+(1, 'E1', FALSE, 'VIP'), (1, 'E2', FALSE, 'VIP'), (1, 'E3', FALSE, 'VIP'), (1, 'E4', TRUE, 'VIP'), (1, 'E5', FALSE, 'VIP'), (1, 'E6', TRUE, 'VIP'), (1, 'E7', FALSE, 'VIP'), (1, 'E8', FALSE, 'VIP'),
+(1, 'F1', FALSE, 'SWEETBOX'), (1, 'F2', FALSE, 'SWEETBOX'), (1, 'F3', FALSE, 'SWEETBOX'), (1, 'F4', FALSE, 'SWEETBOX'), (1, 'F5', FALSE, 'SWEETBOX'), (1, 'F6', FALSE, 'SWEETBOX'), (1, 'F7', FALSE, 'SWEETBOX'), (1, 'F8', FALSE, 'SWEETBOX');
+
+-- Sao chép ghế cho các showtime_id khác (2 đến 20)
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 2, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 3, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 4, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 5, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 6, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 7, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 8, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 9, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 10, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 11, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 12, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 13, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 14, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 15, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 16, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 17, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 18, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 19, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+INSERT INTO seats (showtime_id, seat_number, is_booked, seat_type) SELECT 20, seat_number, FALSE, seat_type FROM seats WHERE showtime_id = 1;
+
+INSERT INTO tickets (showtime_id, seat_number) VALUES 
+(7, 'B4'), -- Avengers, 28/02/2025, CGV Mỹ Tho
+(7, 'D5'),
+(7, 'E6'),
+(7, 'E4');
+
+SELECT s.showtime_id, s.showtime
+FROM showtimes s
+JOIN theaters t ON s.theater_id = t.theater_id
+JOIN movies m ON s.movie_id = m.movie_id
+WHERE m.movie_name = 'Avengers' 
+  AND t.theater_name = 'CGV Mỹ Tho' 
+  AND DATE(s.showtime) = '2025-03-01';
+  
+  SELECT s.showtime_id, s.showtime
+FROM showtimes s
+JOIN theaters t ON s.theater_id = t.theater_id
+JOIN movies m ON s.movie_id = m.movie_id
+WHERE m.movie_name = 'Avengers' AND t.theater_name = 'CGV Mỹ Tho' AND DATE(s.showtime) = STR_TO_DATE('01/03/2025', '%d/%m/%Y')
